@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Basic shader setup</title>
+		<link rel="stylesheet" type="text/css" href="css/style.css">		
+	</head>
+	<body>
+		<canvas id="maincanvas" width="800" height="450" />
+
+		<script type="x-shader/x-vertex" id="vertexShader">
+			void main(void) {
+ 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+ 			}
+		</script>
+		<script type="x-shader/x-fragment" id="fragmentShader">
+			uniform float rotAngle;
+
+			float linearstep(float lo, float hi, float x)
+			{
+ 				return (clamp(x, lo, hi) - lo) / (hi - lo);
+ 			}
+
+ 			vec4 circle(vec4 bgcolor, vec4 color, float angle, float direction)
+ 			{
+ 				angle *= direction;
+
+ 				mat2 rotMat = mat2( cos(angle), sin(angle),
+ 					               -sin(angle), cos(angle));
+ 				vec2 pos = mod(rotMat * gl_FragCoord.xy, vec2(50.0)) - vec2(25.0);
+
+ 				float dist_squared = dot(pos, pos);
+				return mix(bgcolor, color,
+					linearstep(0., 500., dist_squared));
+ 			}
+
+			void main()
+			{
+				// Circles
+				vec4 black = vec4(0., 0., 0., 1.);
+				vec4 red = vec4(1., 0., 0., 1.);
+				vec4 green = vec4(0., 1., 0., 1.);
+				vec4 color1 = circle(red, black, rotAngle, 1.);
+				vec4 color2 = circle(green, black, rotAngle, -1.);
+
+				gl_FragColor.x = max(color1.x, color2.x);
+				gl_FragColor.y = max(color1.y, color2.y);
+				gl_FragColor.z = max(color1.z, color2.z);
+				// gl_FragColor = color2;
+				// Green
+				// gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+			}
+		</script>
+
+		<script type="text/javascript" src="js/three.min.js"></script>
+		<script type="text/javascript" src="js/basicShaders.js"></script>	
+	</body>
+</html>
