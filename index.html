@@ -6,6 +6,7 @@
 		<link rel="stylesheet" type="text/css" href="css/style.css">		
 	</head>
 	<body>
+		<input type="text" id="param" value="0.0">
 		<canvas id="maincanvas" width="800" height="450" />
 
 		<script type="x-shader/x-vertex" id="vertexShader">
@@ -14,44 +15,66 @@
  			}
 		</script>
 		<script type="x-shader/x-fragment" id="fragmentShader">
+			uniform float dividor;
 			uniform float rotAngle;
+			uniform int shaderType;
 
 			float linearstep(float lo, float hi, float x)
 			{
  				return (clamp(x, lo, hi) - lo) / (hi - lo);
  			}
 
- 			vec4 circle(vec4 bgcolor, vec4 color, float angle, float direction)
+ 			vec4 _circle(vec4 bgcolor, vec4 color, float angle)
  			{
- 				angle *= direction;
-
  				mat2 rotMat = mat2( cos(angle), sin(angle),
  					               -sin(angle), cos(angle));
- 				vec2 pos = mod(rotMat * gl_FragCoord.xy, vec2(50.0)) - vec2(25.0);
+ 				vec2 pos = mod(rotMat * gl_FragCoord.xy, vec2(50.0)) - vec2(dividor);
 
  				float dist_squared = dot(pos, pos);
 				return mix(bgcolor, color,
 					linearstep(0., 500., dist_squared));
  			}
 
-			void main()
-			{
+ 			vec4 circles()
+ 			{
 				// Circles
 				vec4 black = vec4(0., 0., 0., 1.);
 				vec4 red = vec4(1., 0., 0., 1.);
 				vec4 green = vec4(0., 1., 0., 1.);
-				vec4 color1 = circle(red, black, rotAngle, 1.);
-				vec4 color2 = circle(green, black, rotAngle, -1.);
+				vec4 color1 = _circle(red, black, rotAngle);
+				vec4 color2 = _circle(green, black, -rotAngle);
+				vec4 retColor = vec4(1., 1., 1., 1.);
 
-				gl_FragColor.x = max(color1.x, color2.x);
-				gl_FragColor.y = max(color1.y, color2.y);
-				gl_FragColor.z = max(color1.z, color2.z);
-				// gl_FragColor = color2;
-				// Green
-				// gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+				retColor.x = max(color1.x, color2.x);
+				retColor.y = max(color1.y, color2.y);
+				retColor.z = max(color1.z, color2.z);
+				return retColor;
+ 			}
+
+ 			vec4 sineWaves()
+ 			{
+ 				float def = 1.0;
+ 				float appliedDividor = dividor;
+ 				if (dividor == 0.0) {
+ 					appliedDividor = def;
+ 				}
+ 				float i = cos(gl_FragCoord.x / appliedDividor);
+ 				float j = cos(gl_FragCoord.y / appliedDividor);
+ 				i = sqrt(i * i + j * j);
+ 				return vec4(i, i, i, 1.);
+ 			}
+
+			void main()
+			{
+				if (shaderType == 1) {
+					gl_FragColor = circles();
+				} else {
+					gl_FragColor = sineWaves();
+				}
 			}
 		</script>
 
+		<script type="text/javascript" src="js/dat.gui.js"></script>
 		<script type="text/javascript" src="js/three.min.js"></script>
 		<script type="text/javascript" src="js/basicShaders.js"></script>	
 	</body>
